@@ -1,25 +1,38 @@
-# POC Testing
+# LedgerLite
 
-Android app scaffold built with Jetpack Compose.
+A personal-finance tracker POC built to practice the Android testing stack. Kotlin · Jetpack
+Compose · MVVM · Hilt · Room · Retrofit/OkHttp · Coroutines/Flow · Navigation Compose · Paging 3.
 
-## Requirements
+> The app is a working skeleton (all screens, real navigation, seeded data). **All tests are
+> compiling, runnable stubs with `TODO()` bodies** — see [TESTING.md](TESTING.md).
 
-- Android Studio (or JDK 11+ and the Android SDK)
-- Compile/target SDK 36, min SDK 33
+## Screens
 
-## Getting Started
+Login/Register (with biometric prompt) · Dashboard (balance + spending chart) · Transaction List
+(paged) · Transaction Detail · Add Expense/Transfer (form validation) · Search/Filter · Settings
+(theme, biometric toggle, "generate 10k demo transactions", logout).
 
-Build and install a debug build via Gradle:
+## Architecture
+
+Clean multi-module: `:core:{model,common,domain,designsystem,database,network,data,notifications,testing}`
++ `:feature:{auth,dashboard,transactions,addexpense,search,settings}` + `:app` +
+`:macrobenchmark` + `:baselineprofile`. Gradle convention plugins live in `build-logic/`.
+
+`data → domain ← ui`. Repositories are the single source of truth (Room); the network layer
+talks to an in-process `MockWebServer` "for now".
+
+## Build & run
 
 ```bash
-./gradlew installDebug
+./gradlew :app:installDebug          # build + install
+./gradlew :app:assembleDebug         # APK only
 ```
 
-Or open the project in Android Studio and run the `app` configuration.
+Requires the Android SDK with **platform 37** and an AGP-9-aware Android Studio. See
+[TESTING.md §3](TESTING.md) for the (deliberately bleeding-edge) toolchain and its known rough
+edges.
 
-## Project Structure
+## Testing
 
-- `app/` — Android application module (`xyz.hihasan.testing`)
-- `app/src/main` — application source and Compose UI theme
-- `app/src/test` — unit tests
-- `app/src/androidTest` — instrumented tests
+Everything — which test lives where, how to run it, and the fill-in checklist — is in
+[TESTING.md](TESTING.md).

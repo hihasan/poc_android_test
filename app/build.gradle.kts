@@ -1,24 +1,16 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ledgerlite.android.application)
+    alias(libs.plugins.ledgerlite.android.compose)
+    alias(libs.plugins.ledgerlite.android.hilt)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
-    namespace = "xyz.hihasan.testing"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    namespace = "xyz.hihasan.ledgerlite"
 
     defaultConfig {
-        applicationId = "xyz.hihasan.testing"
-        minSdk = 33
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "xyz.hihasan.ledgerlite"
+        testInstrumentationRunner = "xyz.hihasan.ledgerlite.core.testing.HiltTestRunner"
     }
 
     buildTypes {
@@ -26,33 +18,46 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures {
-        compose = true
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            proguardFiles("benchmark-rules.pro")
+        }
     }
 }
 
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(project(":core:model"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:data"))
+    implementation(project(":core:database"))
+    implementation(project(":core:network"))
+    implementation(project(":core:notifications"))
+
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:dashboard"))
+    implementation(project(":feature:transactions"))
+    implementation(project(":feature:addexpense"))
+    implementation(project(":feature:search"))
+    implementation(project(":feature:settings"))
+
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    debugImplementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.profileinstaller)
+
+    baselineProfile(project(":baselineprofile"))
+
+    androidTestImplementation(project(":core:testing"))
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestImplementation(libs.hilt.android.testing)
 }

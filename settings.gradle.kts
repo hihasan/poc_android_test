@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -11,9 +12,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -22,5 +20,26 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "POC Testing"
+rootProject.name = "LedgerLite"
+
 include(":app")
+
+include(":core:model")
+include(":core:common")
+include(":core:designsystem")
+include(":core:domain")
+include(":core:database")
+include(":core:network")
+include(":core:data")
+include(":core:notifications")
+include(":core:testing")
+
+include(":feature:auth")
+include(":feature:dashboard")
+include(":feature:transactions")
+include(":feature:addexpense")
+include(":feature:search")
+include(":feature:settings")
+
+include(":macrobenchmark")
+include(":baselineprofile")
