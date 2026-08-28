@@ -1,13 +1,13 @@
-package xyz.hihasan.ledgerlite.core.network.mock
+package xyz.hihasan.ledgerlite.core.testing.network
 
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 
 /**
- * Canned responses so the app (and E2E tests) can talk to a real Retrofit stack without a
- * backend. Tests can install their own [Dispatcher] on the shared [okhttp3.mockwebserver.MockWebServer]
- * to script specific scenarios.
+ * Canned responses so instrumented tests can talk to a real Retrofit stack without a backend.
+ * Installed on the [okhttp3.mockwebserver.MockWebServer] that [FakeNetworkModule] provides; a test
+ * that needs a specific scenario can inject that server and swap its `dispatcher`.
  */
 class MockApiDispatcher : Dispatcher() {
 

@@ -26,7 +26,7 @@ LedgerLite
 ├── core:domain       (JVM)     Use cases + repository interfaces. Unit tests: JUnit 5 · src/test
 ├── core:designsystem (AGP)     Compose theme + components + `LedgerTestTags`
 ├── core:database     (AGP)     Room. Instrumented DAO tests · src/androidTest
-├── core:network      (AGP)     Retrofit/OkHttp + in-process MockWebServer fake
+├── core:network      (AGP)     Retrofit/OkHttp. `@ApiBaseUrl` from BuildConfig; tests swap it (§7)
 ├── core:data         (AGP)     Repository impls, paging, FakeDataFactory.
 │                               Integration tests (Room + MockWebServer) · src/androidTest
 ├── core:notifications(AGP)     Local notification + deep link
@@ -171,8 +171,8 @@ anything yet — that's your job.
 
 ### End-to-end — `:app/src/androidTest/…/e2e`
 - [ ] `LoginToDashboardE2ETest` — full journey through the real NavHost/VMs/Room + MockWebServer.
-      To own the server, add a `@TestInstallIn` replacement for `NetworkModule` (see §7). Run on
-      API ≤ 36.
+      The server is already injected (from `:core:testing` `FakeNetworkModule`, see §7); script
+      per-scenario responses by swapping `mockWebServer.dispatcher`. Run on API ≤ 36.
 
 ### Screenshot — `:feature:{dashboard,addexpense}/src/screenshotTest`
 - [ ] Replace the placeholder `Text` in each `@Preview` with a real stateless content composable
@@ -216,21 +216,39 @@ edge.
 |---|---|
 | `HiltTestRunner` | `testInstrumentationRunner` — swaps in `HiltTestApplication`. Already set for `:app` and every `:feature:*`. |
 | `MainDispatcherRule` | Replaces `Dispatchers.Main` with a `TestDispatcher` in ViewModel unit tests. |
-| `MockWebServerRule` | Starts/stops a `MockWebServer`; `baseUrl` + `enqueueDispatcher(...)`. |
+| `MockWebServerRule` | Starts/stops a `MockWebServer` (bound to loopback); `baseUrl` + `enqueueDispatcher(...)`. For non-Hilt tests that build Retrofit by hand. |
+| `network.FakeNetworkModule` | `@TestInstallIn` module — see below. |
+| `network.MockApiDispatcher` | Happy-path canned API responses (`auth`, `accounts`, `transactions`). |
 | `TestDatabaseFactory.create()` | In-memory `LedgerDatabase`. |
 | `TestData` / `FakeDataFactory` | Fixed single records + deterministic 10k+ batches. |
 
-To replace a real Hilt module in an instrumented test:
+### The network seam
+
+`:core:network` no longer bundles `MockWebServer`. `NetworkModule` provides the Retrofit stack;
+a **separate** `NetworkUrlModule` provides `@ApiBaseUrl` from `BuildConfig.API_BASE_URL`.
+
+`:core:testing` ships `FakeNetworkModule`, which replaces **only** `NetworkUrlModule` for every
+`@HiltAndroidTest`:
 
 ```kotlin
 @Module
-@TestInstallIn(components = [SingletonComponent::class], replaces = [NetworkModule::class])
-object TestNetworkModule {
-    @Provides @Singleton fun server(): MockWebServer = MockWebServer().apply { start() }
-    @Provides @ApiBaseUrl fun baseUrl(s: MockWebServer): String = s.url("/").toString()
-    // …provide OkHttp / Retrofit / LedgerApi pointed at the test server
+@TestInstallIn(components = [SingletonComponent::class], replaces = [NetworkUrlModule::class])
+object FakeNetworkModule {
+    @Provides @Singleton
+    fun provideMockWebServer(): MockWebServer = MockWebServer().apply {
+        dispatcher = MockApiDispatcher()
+        start(InetAddress.getLoopbackAddress(), 0)
+    }
+    @Provides @ApiBaseUrl
+    fun provideBaseUrl(server: MockWebServer): String = server.url("/").toString()
 }
 ```
 
-Put it in the consuming module's `src/androidTest`, annotate the test class `@HiltAndroidTest`,
-and add `@get:Rule val hiltRule = HiltAndroidRule(this)`.
+So any test class annotated `@HiltAndroidTest` with `@get:Rule val hiltRule = HiltAndroidRule(this)`
+gets the real Retrofit/OkHttp stack pointed at an in-process server — no per-module setup. To
+script responses, `@Inject lateinit var mockWebServer: MockWebServer` and swap its `dispatcher`
+(or `enqueue(...)`) in `@Before` / per test. `LoginToDashboardE2ETest` shows the wiring.
+
+For a module-specific double (e.g. a fake `LedgerApi`), still drop a `@TestInstallIn` module in
+that module's own `src/androidTest`; it composes with `FakeNetworkModule` as long as they don't
+both `replaces` the same module.

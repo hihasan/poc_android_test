@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.ledgerlite.android.library)
+    // Runs the Hilt/KSP processor over this main source set so `FakeNetworkModule`'s
+    // `@TestInstallIn` aggregation metadata is generated for consuming `@HiltAndroidTest` runs.
+    alias(libs.plugins.ledgerlite.android.hilt)
 }
 
 android {
