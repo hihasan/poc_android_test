@@ -10,7 +10,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.common.truth.Truth.assertThat
 import xyz.hihasan.ledgerlite.MainActivity
+import javax.inject.Inject
 
 /**
  * END-TO-END test: full `login → add expense → dashboard updates` journey through the real
@@ -22,8 +24,10 @@ import xyz.hihasan.ledgerlite.MainActivity
  * Run with `:app:connectedDebugAndroidTest`. Uses [xyz.hihasan.ledgerlite.core.testing.HiltTestRunner]
  * (configured as the module's `testInstrumentationRunner`).
  *
- * TODO: to fully control the backend, replace `NetworkModule` with a `@TestInstallIn` module that
- * provides a `MockWebServer` you own here (see TESTING.md → "Swapping test doubles").
+ * The [MockWebServer] is owned by `:core:testing` `FakeNetworkModule`, which replaces
+ * `NetworkUrlModule` via `@TestInstallIn` for every `@HiltAndroidTest`. Inject it here and swap its
+ * `dispatcher` to script per-scenario responses; it already serves
+ * `xyz.hihasan.ledgerlite.core.testing.network.MockApiDispatcher`'s happy-path canned responses.
  */
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -35,18 +39,19 @@ class LoginToDashboardE2ETest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    // Provided by the app's NetworkModule today; swap for a test-owned instance via @TestInstallIn.
-    private lateinit var mockWebServer: MockWebServer
+    @Inject
+    lateinit var mockWebServer: MockWebServer
 
     @Before
     fun setUp() {
         hiltRule.inject()
-        // TODO: obtain / start the MockWebServer and script its Dispatcher.
+        // Sanity-check the test backend is up before driving the UI.
+        assertThat(mockWebServer.port).isGreaterThan(0)
     }
 
     @After
     fun tearDown() {
-        // TODO: shut the MockWebServer down if this test owns it.
+        // The singleton MockWebServer is torn down with the test process; nothing to close here.
     }
 
     @Test
