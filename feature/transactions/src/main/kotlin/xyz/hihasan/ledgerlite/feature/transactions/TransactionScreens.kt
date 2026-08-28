@@ -1,13 +1,18 @@
 package xyz.hihasan.ledgerlite.feature.transactions
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,7 +34,9 @@ import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.flowOf
 import xyz.hihasan.ledgerlite.core.designsystem.component.EmptyState
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
+import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerCard
 import xyz.hihasan.ledgerlite.core.designsystem.component.LoadingIndicator
+import xyz.hihasan.ledgerlite.core.designsystem.component.SectionHeader
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
 import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
@@ -87,15 +96,35 @@ fun TransactionListContent(
 
 @Composable
 private fun TransactionRow(tx: Transaction, onClick: () -> Unit) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .testTag(LedgerTestTags.transactionRow(tx.id))
-            .padding(16.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(tx.description)
-        Text("${tx.type.name} · ${tx.currency} ${tx.amount.majorUnits}")
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = tx.description,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${tx.type.name} · ${tx.category.name}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = "${tx.currency} ${tx.amount.majorUnits}",
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
 }
 
@@ -129,15 +158,21 @@ fun TransactionDetailContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Text(
-                    text = "${transaction.currency} ${transaction.amount.majorUnits}",
-                    modifier = Modifier.testTag(LedgerTestTags.TRANSACTION_DETAIL_AMOUNT),
-                )
-                Text(transaction.description)
-                Text(transaction.category.name)
-                Text(transaction.timestamp.toString())
+                LedgerCard {
+                    SectionHeader("${transaction.type.name} · ${transaction.currency}")
+                    Text(
+                        text = "${transaction.currency} ${transaction.amount.majorUnits}",
+                        style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.testTag(LedgerTestTags.TRANSACTION_DETAIL_AMOUNT),
+                    )
+                }
+                DetailRow("Description", transaction.description)
+                DetailRow("Category", transaction.category.name)
+                DetailRow("Date", transaction.timestamp.toString())
+                Spacer(Modifier.weight(1f))
                 LedgerButton(
                     text = "Delete",
                     onClick = onDelete,
@@ -145,6 +180,27 @@ fun TransactionDetailContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f, fill = false),
+        )
     }
 }
 

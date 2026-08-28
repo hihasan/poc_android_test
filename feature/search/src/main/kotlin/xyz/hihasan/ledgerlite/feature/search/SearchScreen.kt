@@ -1,6 +1,7 @@
 package xyz.hihasan.ledgerlite.feature.search
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,6 +67,7 @@ fun SearchContent(
             .fillMaxSize()
             .padding(16.dp)
             .testTag(LedgerTestTags.SEARCH_SCREEN),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         LedgerTextField(
             value = filter.query,
@@ -77,6 +81,7 @@ fun SearchContent(
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .testTag(LedgerTestTags.SEARCH_FILTER_BUTTON),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TransactionType.entries.forEach { type ->
                 FilterChip(
@@ -84,7 +89,6 @@ fun SearchContent(
                     onClick = { onToggleType(type) },
                     label = { Text(type.name) },
                     modifier = Modifier
-                        .padding(end = 8.dp)
                         .testTag(LedgerTestTags.SEARCH_TYPE_CHIP_PREFIX + type.name),
                 )
             }
@@ -100,13 +104,24 @@ fun SearchContent(
                 key = results.itemKey { it.id },
             ) { index ->
                 val tx = results[index] ?: return@items
-                Text(
-                    text = "${tx.description} — ${tx.currency} ${tx.amount.majorUnits}",
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(LedgerTestTags.transactionRow(tx.id))
-                        .padding(12.dp),
-                )
+                        .padding(vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = tx.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = "${tx.currency} ${tx.amount.majorUnits}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                HorizontalDivider()
             }
         }
     }

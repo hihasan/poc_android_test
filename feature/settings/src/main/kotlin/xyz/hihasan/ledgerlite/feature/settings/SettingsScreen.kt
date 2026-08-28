@@ -6,17 +6,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
+import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerCard
+import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerOutlinedButton
+import xyz.hihasan.ledgerlite.core.designsystem.component.SectionHeader
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
 import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
@@ -53,31 +59,52 @@ fun SettingsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp)
+            .padding(horizontal = 24.dp, vertical = 28.dp)
             .testTag(LedgerTestTags.SETTINGS_SCREEN),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        SettingRow(
-            label = "Dark theme",
-            checked = settings.darkTheme,
-            onCheckedChange = onDarkThemeChange,
-            testTag = LedgerTestTags.SETTINGS_DARK_THEME_SWITCH,
-        )
-        SettingRow(
-            label = "Unlock with biometrics",
-            checked = settings.biometricUnlock,
-            onCheckedChange = onBiometricChange,
-            testTag = LedgerTestTags.SETTINGS_BIOMETRIC_SWITCH,
-        )
-        Text("Default currency: ${settings.defaultCurrency}")
+        Text("Settings", style = MaterialTheme.typography.headlineMedium)
 
+        SectionHeader("Preferences")
+        LedgerCard(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            SettingRow(
+                label = "Dark theme",
+                checked = settings.darkTheme,
+                onCheckedChange = onDarkThemeChange,
+                testTag = LedgerTestTags.SETTINGS_DARK_THEME_SWITCH,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            SettingRow(
+                label = "Unlock with biometrics",
+                checked = settings.biometricUnlock,
+                onCheckedChange = onBiometricChange,
+                testTag = LedgerTestTags.SETTINGS_BIOMETRIC_SWITCH,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("Default currency", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    settings.defaultCurrency,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        SectionHeader("Data")
         LedgerButton(
             text = if (seeding) "Generating 10k transactions…" else "Generate demo data (10k)",
             onClick = onSeed,
             enabled = !seeding,
             modifier = Modifier.testTag(LedgerTestTags.SETTINGS_SEED_DATA_BUTTON),
         )
-        LedgerButton(
+
+        LedgerOutlinedButton(
             text = "Log out",
             onClick = onLogout,
             modifier = Modifier.testTag(LedgerTestTags.SETTINGS_LOGOUT_BUTTON),
@@ -93,10 +120,13 @@ private fun SettingRow(
     testTag: String,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label)
+        Text(label, style = MaterialTheme.typography.bodyLarge)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,

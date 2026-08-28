@@ -2,6 +2,12 @@ package xyz.hihasan.ledgerlite.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.NavigationBar
@@ -9,6 +15,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -32,13 +39,18 @@ import xyz.hihasan.ledgerlite.feature.transactions.navigateToTransactionDetail
 import xyz.hihasan.ledgerlite.feature.transactions.transactionDetailScreen
 import xyz.hihasan.ledgerlite.feature.transactions.transactionListScreen
 
-private data class TopLevelDestination(val route: String, val label: String, val tag: String)
+private data class TopLevelDestination(
+    val route: String,
+    val label: String,
+    val tag: String,
+    val icon: ImageVector,
+)
 
 private val TOP_LEVEL = listOf(
-    TopLevelDestination(DASHBOARD_ROUTE, "Home", "bottom_nav_dashboard"),
-    TopLevelDestination(TRANSACTION_LIST_ROUTE, "Activity", "bottom_nav_transactions"),
-    TopLevelDestination(SEARCH_ROUTE, "Search", "bottom_nav_search"),
-    TopLevelDestination(SETTINGS_ROUTE, "Settings", "bottom_nav_settings"),
+    TopLevelDestination(DASHBOARD_ROUTE, "Home", "bottom_nav_dashboard", Icons.Outlined.Home),
+    TopLevelDestination(TRANSACTION_LIST_ROUTE, "Activity", "bottom_nav_transactions", Icons.Outlined.ReceiptLong),
+    TopLevelDestination(SEARCH_ROUTE, "Search", "bottom_nav_search", Icons.Outlined.Search),
+    TopLevelDestination(SETTINGS_ROUTE, "Settings", "bottom_nav_settings", Icons.Outlined.Settings),
 )
 
 @Composable
@@ -66,7 +78,7 @@ fun LedgerNavHost() {
                                     restoreState = true
                                 }
                             },
-                            icon = { Text(item.label.take(1)) },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
                             label = { Text(item.label) },
                             modifier = Modifier.testTag(item.tag),
                         )

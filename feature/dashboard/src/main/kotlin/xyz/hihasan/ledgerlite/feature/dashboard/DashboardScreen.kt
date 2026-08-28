@@ -2,13 +2,18 @@ package xyz.hihasan.ledgerlite.feature.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -20,7 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.EmptyState
+import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerCard
 import xyz.hihasan.ledgerlite.core.designsystem.component.LoadingIndicator
+import xyz.hihasan.ledgerlite.core.designsystem.component.SectionHeader
 import xyz.hihasan.ledgerlite.core.designsystem.component.SpendingBarChart
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
@@ -72,22 +79,56 @@ fun DashboardContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Text(
-                    text = "Balance: ${s.data.totalBalance.majorUnits}",
-                    modifier = Modifier.testTag(LedgerTestTags.DASHBOARD_BALANCE_TEXT),
-                )
-                Text("Spent this month: ${s.data.summary.totalSpent.majorUnits}")
-                SpendingBarChart(
-                    entries = s.data.summary.byCategory.map {
-                        it.category.name to it.total.minorUnits.toFloat()
-                    },
-                    modifier = Modifier.testTag(LedgerTestTags.DASHBOARD_SPENDING_CHART),
-                )
-                Column(Modifier.testTag(LedgerTestTags.DASHBOARD_CATEGORY_LEGEND)) {
-                    s.data.summary.byCategory.forEach { Text("${it.category.name}: ${it.total.majorUnits}") }
+                LedgerCard {
+                    SectionHeader("Total balance")
+                    Text(
+                        text = "${s.data.totalBalance.majorUnits}",
+                        style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.testTag(LedgerTestTags.DASHBOARD_BALANCE_TEXT),
+                    )
+                    Text(
+                        text = "Spent this month · ${s.data.summary.totalSpent.majorUnits}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                SectionHeader("Spending by category")
+                LedgerCard {
+                    SpendingBarChart(
+                        entries = s.data.summary.byCategory.map {
+                            it.category.name to it.total.minorUnits.toFloat()
+                        },
+                        modifier = Modifier.testTag(LedgerTestTags.DASHBOARD_SPENDING_CHART),
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(LedgerTestTags.DASHBOARD_CATEGORY_LEGEND),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    s.data.summary.byCategory.forEach {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = it.category.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = "${it.total.majorUnits}",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                    }
                 }
             }
         }

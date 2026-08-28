@@ -2,16 +2,20 @@ package xyz.hihasan.ledgerlite.feature.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -21,7 +25,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
+import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerOutlinedButton
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerTextField
+import xyz.hihasan.ledgerlite.core.designsystem.component.SectionHeader
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
 import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
@@ -69,11 +75,18 @@ fun LoginContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .padding(horizontal = 24.dp, vertical = 32.dp)
             .testTag(LedgerTestTags.LOGIN_SCREEN),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Welcome back")
+        SectionHeader("LedgerLite")
+        Text("Welcome back", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Sign in to pick up where you left off.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
         LedgerTextField(
             value = state.email,
             onValueChange = onEmailChange,
@@ -91,8 +104,14 @@ fun LoginContent(
             modifier = Modifier.testTag(LedgerTestTags.LOGIN_PASSWORD_FIELD),
         )
         state.generalError?.let {
-            Text(it, modifier = Modifier.testTag(LedgerTestTags.LOGIN_ERROR_TEXT))
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.testTag(LedgerTestTags.LOGIN_ERROR_TEXT),
+            )
         }
+        Spacer(Modifier.height(4.dp))
         LedgerButton(
             text = if (state.isSubmitting) "Signing in…" else "Sign in",
             onClick = onSubmit,
@@ -100,13 +119,16 @@ fun LoginContent(
             modifier = Modifier.testTag(LedgerTestTags.LOGIN_SUBMIT_BUTTON),
         )
         if (state.biometricAvailable) {
-            LedgerButton(
+            LedgerOutlinedButton(
                 text = "Use biometrics",
                 onClick = onUseBiometrics,
                 modifier = Modifier.testTag(LedgerTestTags.LOGIN_BIOMETRIC_BUTTON),
             )
         }
-        TextButton(onClick = onNavigateToRegister) {
+        TextButton(
+            onClick = onNavigateToRegister,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        ) {
             Text("Create an account")
         }
     }
@@ -150,11 +172,13 @@ fun RegisterContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .padding(horizontal = 24.dp, vertical = 32.dp)
             .testTag(LedgerTestTags.REGISTER_SCREEN),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Create your account")
+        SectionHeader("Get started")
+        Text("Create your account", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(8.dp))
         LedgerTextField(
             value = state.displayName,
             onValueChange = onDisplayNameChange,
@@ -186,14 +210,24 @@ fun RegisterContent(
             errorText = state.fieldErrors["confirmPassword"],
             modifier = Modifier.testTag(LedgerTestTags.REGISTER_CONFIRM_PASSWORD_FIELD),
         )
-        state.generalError?.let { Text(it) }
+        state.generalError?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         LedgerButton(
             text = if (state.isSubmitting) "Creating…" else "Create account",
             onClick = onSubmit,
             enabled = !state.isSubmitting,
             modifier = Modifier.testTag(LedgerTestTags.REGISTER_SUBMIT_BUTTON),
         )
-        TextButton(onClick = onBack) { Text("Back to sign in") }
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        ) { Text("Back to sign in") }
     }
 }
 

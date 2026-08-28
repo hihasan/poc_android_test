@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerTextField
+import xyz.hihasan.ledgerlite.core.designsystem.component.SectionHeader
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
 import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
@@ -74,10 +76,13 @@ fun AddTransactionContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .padding(horizontal = 24.dp, vertical = 28.dp)
             .testTag(LedgerTestTags.ADD_TX_SCREEN),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        Text("New transaction", style = MaterialTheme.typography.headlineMedium)
+
+        SectionHeader("Type")
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.testTag(LedgerTestTags.ADD_TX_TYPE_TOGGLE),
@@ -111,8 +116,11 @@ fun AddTransactionContent(
         )
 
         // Minimal category picker (swap for an ExposedDropdownMenu later).
-        Column(Modifier.testTag(LedgerTestTags.ADD_TX_CATEGORY_DROPDOWN)) {
-            Text("Category: ${state.form.category?.name ?: "none"}")
+        Column(
+            modifier = Modifier.testTag(LedgerTestTags.ADD_TX_CATEGORY_DROPDOWN),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SectionHeader("Category · ${state.form.category?.name ?: "none"}")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
                     TransactionCategory.GROCERIES,
@@ -129,8 +137,11 @@ fun AddTransactionContent(
             state.fieldErrors["category"]?.let { Text(it) }
         }
 
-        Column(Modifier.testTag(LedgerTestTags.ADD_TX_ACCOUNT_DROPDOWN)) {
-            Text("Account: ${state.form.accountId ?: "none"}")
+        Column(
+            modifier = Modifier.testTag(LedgerTestTags.ADD_TX_ACCOUNT_DROPDOWN),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SectionHeader("Account · ${state.form.accountId ?: "none"}")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 accounts.forEach { account ->
                     FilterChip(
@@ -144,8 +155,11 @@ fun AddTransactionContent(
         }
 
         if (state.form.type == TransactionType.TRANSFER) {
-            Column(Modifier.testTag(LedgerTestTags.ADD_TX_COUNTERPARTY_DROPDOWN)) {
-                Text("To account: ${state.form.counterpartyAccountId ?: "none"}")
+            Column(
+                modifier = Modifier.testTag(LedgerTestTags.ADD_TX_COUNTERPARTY_DROPDOWN),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SectionHeader("To account · ${state.form.counterpartyAccountId ?: "none"}")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     accounts.forEach { account ->
                         FilterChip(
@@ -166,7 +180,13 @@ fun AddTransactionContent(
             modifier = Modifier.testTag(LedgerTestTags.ADD_TX_NOTE_FIELD),
         )
 
-        state.generalError?.let { Text(it) }
+        state.generalError?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
 
         LedgerButton(
             text = if (state.isSaving) "Saving…" else "Save",
