@@ -17,11 +17,23 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import kotlinx.coroutines.flow.flowOf
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerTextField
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
+import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
+import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
+import xyz.hihasan.ledgerlite.core.model.Money
+import xyz.hihasan.ledgerlite.core.model.Transaction
+import xyz.hihasan.ledgerlite.core.model.TransactionCategory
+import xyz.hihasan.ledgerlite.core.model.TransactionFilter
 import xyz.hihasan.ledgerlite.core.model.TransactionType
+import java.time.Instant
 
 @Composable
 fun SearchRoute(
@@ -31,6 +43,22 @@ fun SearchRoute(
     val filter by viewModel.filter.collectAsStateWithLifecycle()
     val results = viewModel.results.collectAsLazyPagingItems()
 
+    SearchContent(
+        filter = filter,
+        results = results,
+        onQueryChange = viewModel::onQueryChange,
+        onToggleType = viewModel::toggleType,
+    )
+}
+
+/** Stateless Search screen. [SearchRoute] owns the ViewModel, debounce, and paging flow. */
+@Composable
+fun SearchContent(
+    filter: TransactionFilter,
+    results: LazyPagingItems<Transaction>,
+    onQueryChange: (String) -> Unit,
+    onToggleType: (TransactionType) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,7 +67,7 @@ fun SearchRoute(
     ) {
         LedgerTextField(
             value = filter.query,
-            onValueChange = viewModel::onQueryChange,
+            onValueChange = onQueryChange,
             label = "Search transactions",
             modifier = Modifier.testTag(LedgerTestTags.SEARCH_QUERY_FIELD),
         )
@@ -53,7 +81,7 @@ fun SearchRoute(
             TransactionType.entries.forEach { type ->
                 FilterChip(
                     selected = type in filter.types,
-                    onClick = { viewModel.toggleType(type) },
+                    onClick = { onToggleType(type) },
                     label = { Text(type.name) },
                     modifier = Modifier
                         .padding(end = 8.dp)
@@ -82,4 +110,75 @@ fun SearchRoute(
             }
         }
     }
+}
+
+// --- Previews ------------------------------------------------------------------
+
+private fun sampleResults(): List<Transaction> = listOf(
+    Transaction(
+        id = "tx-1",
+        type = TransactionType.EXPENSE,
+        category = TransactionCategory.DINING,
+        amount = Money(3_180),
+        currency = "USD",
+        description = "Dinner with friends",
+        timestamp = Instant.parse("2026-08-21T20:00:00Z"),
+        accountId = "acc-checking",
+    ),
+    Transaction(
+        id = "tx-2",
+        type = TransactionType.EXPENSE,
+        category = TransactionCategory.TRANSPORT,
+        amount = Money(950),
+        currency = "USD",
+        description = "Metro card top-up",
+        timestamp = Instant.parse("2026-08-19T08:30:00Z"),
+        accountId = "acc-checking",
+    ),
+)
+
+@Composable
+private fun rememberPreviewPagingItems(data: List<Transaction>): LazyPagingItems<Transaction> {
+    val pagingData = PagingData.from(
+        data = data,
+        sourceLoadStates = LoadStates(
+            refresh = LoadState.NotLoading(endOfPaginationReached = true),
+            prepend = LoadState.NotLoading(endOfPaginationReached = true),
+            append = LoadState.NotLoading(endOfPaginationReached = true),
+        ),
+    )
+    return flowOf(pagingData).collectAsLazyPagingItems()
+}
+
+@ThemePreviews
+@Composable
+private fun SearchContentPreview() = LedgerTheme {
+    SearchContent(
+        filter = TransactionFilter(query = "din"),
+        results = rememberPreviewPagingItems(sampleResults()),
+        onQueryChange = {},
+        onToggleType = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun SearchContentFilteredPreview() = LedgerTheme {
+    SearchContent(
+        filter = TransactionFilter(query = "", types = setOf(TransactionType.EXPENSE, TransactionType.INCOME)),
+        results = rememberPreviewPagingItems(sampleResults()),
+        onQueryChange = {},
+        onToggleType = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun SearchContentEmptyPreview() = LedgerTheme {
+    SearchContent(
+        filter = TransactionFilter(query = "xyzzy"),
+        results = rememberPreviewPagingItems(emptyList()),
+        onQueryChange = {},
+        onToggleType = {},
+    )
 }

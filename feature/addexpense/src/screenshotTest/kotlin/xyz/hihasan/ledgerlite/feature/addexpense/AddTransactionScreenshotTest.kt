@@ -1,25 +1,38 @@
 package xyz.hihasan.ledgerlite.feature.addexpense
 
 import android.content.res.Configuration
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
+import xyz.hihasan.ledgerlite.core.domain.model.TransactionFormInput
+import xyz.hihasan.ledgerlite.core.model.TransactionCategory
+import xyz.hihasan.ledgerlite.core.model.TransactionType
 
 /**
  * Compose Preview Screenshot tests for the Add Expense / Transfer form.
  *   * `:feature:addexpense:updateDebugScreenshotTest`   — record reference PNGs
  *   * `:feature:addexpense:validateDebugScreenshotTest` — diff against them (CI)
- * Each non-private `@Preview` is a test case.
- *
- * TODO: render a stateless `AddTransactionContent(...)` with a fixed form + a variant that shows
- * validation errors (so the error tags are captured).
+ * Each non-private `@Preview` is a test case; they render the real stateless
+ * [AddTransactionContent] with the shared [sampleAccounts] fixture.
  */
 @Preview(name = "Add expense · light", showBackground = true, widthDp = 400, heightDp = 900)
 @Composable
 fun AddExpenseLightSnapshot() {
     LedgerTheme(darkTheme = false) {
-        Text("TODO: AddTransactionContent(state = AddTransactionUiState())")
+        AddTransactionContent(
+            state = AddTransactionUiState(
+                form = TransactionFormInput(
+                    type = TransactionType.EXPENSE,
+                    amountText = "42.50",
+                    description = "Weekly groceries",
+                    category = TransactionCategory.GROCERIES,
+                    accountId = "acc-checking",
+                ),
+            ),
+            accounts = sampleAccounts(),
+            onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+            onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+        )
     }
 }
 
@@ -33,7 +46,20 @@ fun AddExpenseLightSnapshot() {
 @Composable
 fun AddExpenseDarkSnapshot() {
     LedgerTheme(darkTheme = true) {
-        Text("TODO: AddTransactionContent(state = AddTransactionUiState())")
+        AddTransactionContent(
+            state = AddTransactionUiState(
+                form = TransactionFormInput(
+                    type = TransactionType.EXPENSE,
+                    amountText = "42.50",
+                    description = "Weekly groceries",
+                    category = TransactionCategory.GROCERIES,
+                    accountId = "acc-checking",
+                ),
+            ),
+            accounts = sampleAccounts(),
+            onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+            onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+        )
     }
 }
 
@@ -41,6 +67,19 @@ fun AddExpenseDarkSnapshot() {
 @Composable
 fun AddExpenseErrorsSnapshot() {
     LedgerTheme(darkTheme = false) {
-        Text("TODO: AddTransactionContent(state = ...fieldErrors = mapOf(\"amount\" to \"Required\"))")
+        AddTransactionContent(
+            state = AddTransactionUiState(
+                form = TransactionFormInput(type = TransactionType.EXPENSE),
+                fieldErrors = mapOf(
+                    "amount" to "Enter an amount",
+                    "description" to "Description is required",
+                    "category" to "Pick a category",
+                ),
+                generalError = "Could not save",
+            ),
+            accounts = sampleAccounts(),
+            onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+            onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+        )
     }
 }

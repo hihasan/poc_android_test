@@ -21,6 +21,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerTextField
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
+import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
+import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
+import xyz.hihasan.ledgerlite.core.domain.model.TransactionFormInput
+import xyz.hihasan.ledgerlite.core.model.Account
+import xyz.hihasan.ledgerlite.core.model.AccountType
+import xyz.hihasan.ledgerlite.core.model.Money
 import xyz.hihasan.ledgerlite.core.model.TransactionCategory
 import xyz.hihasan.ledgerlite.core.model.TransactionType
 
@@ -36,6 +42,34 @@ fun AddTransactionRoute(
         if (state.savedSuccessfully) onSaved()
     }
 
+    AddTransactionContent(
+        state = state,
+        accounts = accounts,
+        onTypeChange = viewModel::onTypeChange,
+        onAmountChange = viewModel::onAmountChange,
+        onDescriptionChange = viewModel::onDescriptionChange,
+        onCategoryChange = viewModel::onCategoryChange,
+        onAccountChange = viewModel::onAccountChange,
+        onCounterpartyChange = viewModel::onCounterpartyChange,
+        onNoteChange = viewModel::onNoteChange,
+        onSave = viewModel::save,
+    )
+}
+
+/** Stateless Add Expense / Transfer form. [AddTransactionRoute] owns the ViewModel + save effect. */
+@Composable
+fun AddTransactionContent(
+    state: AddTransactionUiState,
+    accounts: List<Account>,
+    onTypeChange: (TransactionType) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onCategoryChange: (TransactionCategory) -> Unit,
+    onAccountChange: (String) -> Unit,
+    onCounterpartyChange: (String) -> Unit,
+    onNoteChange: (String) -> Unit,
+    onSave: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,7 +85,7 @@ fun AddTransactionRoute(
             TransactionType.entries.forEach { type ->
                 FilterChip(
                     selected = state.form.type == type,
-                    onClick = { viewModel.onTypeChange(type) },
+                    onClick = { onTypeChange(type) },
                     label = { Text(type.name) },
                 )
             }
@@ -59,7 +93,7 @@ fun AddTransactionRoute(
 
         LedgerTextField(
             value = state.form.amountText,
-            onValueChange = viewModel::onAmountChange,
+            onValueChange = onAmountChange,
             label = "Amount",
             keyboardType = KeyboardType.Decimal,
             errorText = state.fieldErrors["amount"],
@@ -69,7 +103,7 @@ fun AddTransactionRoute(
 
         LedgerTextField(
             value = state.form.description,
-            onValueChange = viewModel::onDescriptionChange,
+            onValueChange = onDescriptionChange,
             label = "Description",
             errorText = state.fieldErrors["description"],
             errorTestTag = LedgerTestTags.ADD_TX_DESCRIPTION_ERROR,
@@ -87,7 +121,7 @@ fun AddTransactionRoute(
                 ).forEach { category ->
                     FilterChip(
                         selected = state.form.category == category,
-                        onClick = { viewModel.onCategoryChange(category) },
+                        onClick = { onCategoryChange(category) },
                         label = { Text(category.name) },
                     )
                 }
@@ -101,7 +135,7 @@ fun AddTransactionRoute(
                 accounts.forEach { account ->
                     FilterChip(
                         selected = state.form.accountId == account.id,
-                        onClick = { viewModel.onAccountChange(account.id) },
+                        onClick = { onAccountChange(account.id) },
                         label = { Text(account.name) },
                     )
                 }
@@ -116,7 +150,7 @@ fun AddTransactionRoute(
                     accounts.forEach { account ->
                         FilterChip(
                             selected = state.form.counterpartyAccountId == account.id,
-                            onClick = { viewModel.onCounterpartyChange(account.id) },
+                            onClick = { onCounterpartyChange(account.id) },
                             label = { Text(account.name) },
                         )
                     }
@@ -127,7 +161,7 @@ fun AddTransactionRoute(
 
         LedgerTextField(
             value = state.form.note,
-            onValueChange = viewModel::onNoteChange,
+            onValueChange = onNoteChange,
             label = "Note (optional)",
             modifier = Modifier.testTag(LedgerTestTags.ADD_TX_NOTE_FIELD),
         )
@@ -136,9 +170,73 @@ fun AddTransactionRoute(
 
         LedgerButton(
             text = if (state.isSaving) "Saving…" else "Save",
-            onClick = viewModel::save,
+            onClick = onSave,
             enabled = !state.isSaving,
             modifier = Modifier.testTag(LedgerTestTags.ADD_TX_SAVE_BUTTON),
         )
     }
+}
+
+// --- Previews ------------------------------------------------------------------
+
+internal fun sampleAccounts(): List<Account> = listOf(
+    Account("acc-checking", "Checking", AccountType.CHECKING, "USD", Money(532_144)),
+    Account("acc-savings", "Savings", AccountType.SAVINGS, "USD", Money(1_200_000)),
+)
+
+@ThemePreviews
+@Composable
+private fun AddTransactionContentPreview() = LedgerTheme {
+    AddTransactionContent(
+        state = AddTransactionUiState(
+            form = TransactionFormInput(
+                type = TransactionType.EXPENSE,
+                amountText = "42.50",
+                description = "Weekly groceries",
+                category = TransactionCategory.GROCERIES,
+                accountId = "acc-checking",
+            ),
+        ),
+        accounts = sampleAccounts(),
+        onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+        onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun AddTransactionContentErrorsPreview() = LedgerTheme {
+    AddTransactionContent(
+        state = AddTransactionUiState(
+            form = TransactionFormInput(type = TransactionType.EXPENSE),
+            fieldErrors = mapOf(
+                "amount" to "Enter an amount",
+                "description" to "Description is required",
+                "category" to "Pick a category",
+            ),
+            generalError = "Could not save",
+        ),
+        accounts = sampleAccounts(),
+        onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+        onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun AddTransactionContentTransferPreview() = LedgerTheme {
+    AddTransactionContent(
+        state = AddTransactionUiState(
+            form = TransactionFormInput(
+                type = TransactionType.TRANSFER,
+                amountText = "250.00",
+                description = "Move to savings",
+                accountId = "acc-checking",
+                counterpartyAccountId = "acc-savings",
+            ),
+        ),
+        accounts = sampleAccounts(),
+        onTypeChange = {}, onAmountChange = {}, onDescriptionChange = {}, onCategoryChange = {},
+        onAccountChange = {}, onCounterpartyChange = {}, onNoteChange = {}, onSave = {},
+    )
 }
