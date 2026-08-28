@@ -23,6 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerButton
 import xyz.hihasan.ledgerlite.core.designsystem.component.LedgerTextField
 import xyz.hihasan.ledgerlite.core.designsystem.testing.LedgerTestTags
+import xyz.hihasan.ledgerlite.core.designsystem.theme.LedgerTheme
+import xyz.hihasan.ledgerlite.core.designsystem.theme.ThemePreviews
 
 @Composable
 fun LoginRoute(
@@ -41,6 +43,28 @@ fun LoginRoute(
         if (state.isAuthenticated) onAuthenticated()
     }
 
+    LoginContent(
+        state = state,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onSubmit = viewModel::submitLogin,
+        onUseBiometrics = {
+            biometricManager?.prompt(onSuccess = viewModel::onBiometricAuthSucceeded)
+        },
+        onNavigateToRegister = onNavigateToRegister,
+    )
+}
+
+/** Stateless Login form. [LoginRoute] owns the ViewModel, session/biometric effects, and nav. */
+@Composable
+fun LoginContent(
+    state: AuthUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onUseBiometrics: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +76,7 @@ fun LoginRoute(
         Text("Welcome back")
         LedgerTextField(
             value = state.email,
-            onValueChange = viewModel::onEmailChange,
+            onValueChange = onEmailChange,
             label = "Email",
             keyboardType = KeyboardType.Email,
             errorText = state.fieldErrors["email"],
@@ -60,7 +84,7 @@ fun LoginRoute(
         )
         LedgerTextField(
             value = state.password,
-            onValueChange = viewModel::onPasswordChange,
+            onValueChange = onPasswordChange,
             label = "Password",
             isPassword = true,
             errorText = state.fieldErrors["password"],
@@ -71,16 +95,14 @@ fun LoginRoute(
         }
         LedgerButton(
             text = if (state.isSubmitting) "Signing in…" else "Sign in",
-            onClick = viewModel::submitLogin,
+            onClick = onSubmit,
             enabled = !state.isSubmitting,
             modifier = Modifier.testTag(LedgerTestTags.LOGIN_SUBMIT_BUTTON),
         )
         if (state.biometricAvailable) {
             LedgerButton(
                 text = "Use biometrics",
-                onClick = {
-                    biometricManager?.prompt(onSuccess = viewModel::onBiometricAuthSucceeded)
-                },
+                onClick = onUseBiometrics,
                 modifier = Modifier.testTag(LedgerTestTags.LOGIN_BIOMETRIC_BUTTON),
             )
         }
@@ -102,6 +124,28 @@ fun RegisterRoute(
         if (state.isAuthenticated) onAuthenticated()
     }
 
+    RegisterContent(
+        state = state,
+        onDisplayNameChange = viewModel::onDisplayNameChange,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onSubmit = viewModel::submitRegister,
+        onBack = onBack,
+    )
+}
+
+/** Stateless Register form. [RegisterRoute] owns the ViewModel, the session effect, and nav. */
+@Composable
+fun RegisterContent(
+    state: AuthUiState,
+    onDisplayNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onBack: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -113,14 +157,14 @@ fun RegisterRoute(
         Text("Create your account")
         LedgerTextField(
             value = state.displayName,
-            onValueChange = viewModel::onDisplayNameChange,
+            onValueChange = onDisplayNameChange,
             label = "Name",
             errorText = state.fieldErrors["displayName"],
             modifier = Modifier.testTag(LedgerTestTags.REGISTER_NAME_FIELD),
         )
         LedgerTextField(
             value = state.email,
-            onValueChange = viewModel::onEmailChange,
+            onValueChange = onEmailChange,
             label = "Email",
             keyboardType = KeyboardType.Email,
             errorText = state.fieldErrors["email"],
@@ -128,7 +172,7 @@ fun RegisterRoute(
         )
         LedgerTextField(
             value = state.password,
-            onValueChange = viewModel::onPasswordChange,
+            onValueChange = onPasswordChange,
             label = "Password",
             isPassword = true,
             errorText = state.fieldErrors["password"],
@@ -136,7 +180,7 @@ fun RegisterRoute(
         )
         LedgerTextField(
             value = state.confirmPassword,
-            onValueChange = viewModel::onConfirmPasswordChange,
+            onValueChange = onConfirmPasswordChange,
             label = "Confirm password",
             isPassword = true,
             errorText = state.fieldErrors["confirmPassword"],
@@ -145,10 +189,82 @@ fun RegisterRoute(
         state.generalError?.let { Text(it) }
         LedgerButton(
             text = if (state.isSubmitting) "Creating…" else "Create account",
-            onClick = viewModel::submitRegister,
+            onClick = onSubmit,
             enabled = !state.isSubmitting,
             modifier = Modifier.testTag(LedgerTestTags.REGISTER_SUBMIT_BUTTON),
         )
         TextButton(onClick = onBack) { Text("Back to sign in") }
     }
+}
+
+// --- Previews ------------------------------------------------------------------
+
+@ThemePreviews
+@Composable
+private fun LoginContentPreview() = LedgerTheme {
+    LoginContent(
+        state = AuthUiState(email = "jane@doe.com", password = "hunter2", biometricAvailable = true),
+        onEmailChange = {},
+        onPasswordChange = {},
+        onSubmit = {},
+        onUseBiometrics = {},
+        onNavigateToRegister = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun LoginContentErrorPreview() = LedgerTheme {
+    LoginContent(
+        state = AuthUiState(
+            email = "jane@doe.com",
+            generalError = "Invalid email or password",
+            fieldErrors = mapOf("password" to "Password is required"),
+        ),
+        onEmailChange = {},
+        onPasswordChange = {},
+        onSubmit = {},
+        onUseBiometrics = {},
+        onNavigateToRegister = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun RegisterContentPreview() = LedgerTheme {
+    RegisterContent(
+        state = AuthUiState(
+            displayName = "Jane Doe",
+            email = "jane@doe.com",
+            password = "hunter2",
+            confirmPassword = "hunter2",
+        ),
+        onDisplayNameChange = {},
+        onEmailChange = {},
+        onPasswordChange = {},
+        onConfirmPasswordChange = {},
+        onSubmit = {},
+        onBack = {},
+    )
+}
+
+@ThemePreviews
+@Composable
+private fun RegisterContentErrorPreview() = LedgerTheme {
+    RegisterContent(
+        state = AuthUiState(
+            displayName = "Jane Doe",
+            email = "not-an-email",
+            fieldErrors = mapOf(
+                "email" to "Enter a valid email",
+                "confirmPassword" to "Passwords don't match",
+            ),
+        ),
+        onDisplayNameChange = {},
+        onEmailChange = {},
+        onPasswordChange = {},
+        onConfirmPasswordChange = {},
+        onSubmit = {},
+        onBack = {},
+    )
 }

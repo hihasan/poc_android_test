@@ -157,11 +157,15 @@ anything yet — that's your job.
 ### Compose UI — `:feature:*/src/androidTest`
 - [ ] One class per screen: `LoginScreenTest`, `RegisterScreenTest`, `DashboardScreenTest`,
       `TransactionListScreenTest`, `TransactionDetailScreenTest`, `AddTransactionScreenTest`,
-      `SearchScreenTest`, `SettingsScreenTest`. Each has `createComposeRule()`; render a
-      stateless slice of the screen fed a fake state, drive it via `onNodeWithTag(LedgerTestTags.…)`.
-      (A commented example is in `LoginScreenTest`.)
-- [ ] Consider extracting stateless `XxxContent(state, callbacks)` composables from each `…Route`
-      so UI + screenshot tests don't need Hilt.
+      `SearchScreenTest`, `SettingsScreenTest`. Each has `createComposeRule()`; render the
+      screen's stateless `XxxContent(...)` fed a fake state, drive it via
+      `onNodeWithTag(LedgerTestTags.…)`. (A commented example is in `LoginScreenTest`.)
+- [x] Every `…Route` is now a thin wrapper over a stateless `XxxContent(state, callbacks)` —
+      `LoginContent`, `RegisterContent`, `DashboardContent`, `AddTransactionContent`,
+      `TransactionListContent`, `TransactionDetailContent`, `SearchContent`, `SettingsContent`.
+      Each has `@ThemePreviews` (light+dark) plus key-state variants right below it in the same
+      file; sample fixtures are `sampleDashboardData()`, `sampleAccounts()`, etc. The shared
+      design-system components have previews in `core/designsystem/…/component/ComponentPreviews.kt`.
 
 ### UI Automator — `:app/src/androidTest/…/uiautomator`
 - [ ] `BiometricPromptFlowTest` — enrol a fingerprint on the emulator, tap
@@ -175,9 +179,12 @@ anything yet — that's your job.
       per-scenario responses by swapping `mockWebServer.dispatcher`. Run on API ≤ 36.
 
 ### Screenshot — `:feature:{dashboard,addexpense}/src/screenshotTest`
-- [ ] Replace the placeholder `Text` in each `@Preview` with a real stateless content composable
-      + fixed data. Keep the light / dark / error variants. Then `updateDebugScreenshotTest` to
-      record and commit references under `src/debug/screenshotTest/reference/`.
+- [x] The placeholder `Text` previews are now real: `DashboardScreenshotTest` renders
+      `DashboardContent` (ready/loading/error, light+dark) and `AddTransactionScreenshotTest`
+      renders `AddTransactionContent` (default/dark/validation-errors), all fed the shared
+      `sampleDashboardData()` / `sampleAccounts()` fixtures from `main`.
+- [ ] Run `updateDebugScreenshotTest` and commit references under
+      `src/debug/screenshotTest/reference/` — blocked until preview discovery works (see §3).
 - [ ] Re-check preview discovery after the next screenshot-plugin bump (see §3).
 
 ### Macrobenchmark — `:macrobenchmark`
